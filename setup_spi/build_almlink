@@ -1,0 +1,1 @@
+dtc -O dtb -o BBB-ALMLINK-00A0.dtbo -b 0 -@ BBB-ALMLINK-00A0.dts

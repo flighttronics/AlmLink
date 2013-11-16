@@ -1,0 +1,2 @@
+/usr/bin/ar cr libgpio.a  CMakeFiles/gpio.dir/gpio.c.o
+/usr/bin/ranlib libgpio.a

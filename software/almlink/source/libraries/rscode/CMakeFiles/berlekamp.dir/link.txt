@@ -1,0 +1,2 @@
+/usr/bin/ar cr libberlekamp.a  CMakeFiles/berlekamp.dir/berlekamp.c.o
+/usr/bin/ranlib libberlekamp.a

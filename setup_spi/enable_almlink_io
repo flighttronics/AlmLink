@@ -1,0 +1,3 @@
+cp BBB-ALMLINK-00A0.dtbo /lib/firmware/
+echo BBB-ALMLINK > /sys/devices/bone_capemgr.*/slots
+cat /sys/kernel/debug/pinctrl/44e10800.pinmux/pingroups

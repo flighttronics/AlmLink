@@ -1,0 +1,2 @@
+/usr/bin/ar cr libfifo_buffer.a  CMakeFiles/fifo_buffer.dir/fifo_buffer.c.o
+/usr/bin/ranlib libfifo_buffer.a
