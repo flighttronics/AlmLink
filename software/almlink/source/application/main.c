@@ -53,10 +53,7 @@ static void rssi(void)
 // This works with test_rx below
 void test_tx(void)
 {
-    uint8_t data[] = "hello................................12334455\0";  // Max 50....
-
-    // 255 octets:
-    //  uint8_t data[] = "12345678901234567890123456789012345678901234567890123456789012312345678901234567890123456789012345678901234567890123456789012312345678901234567890123456789012345678901234567890123456789012312345678901234567890123456789012345678901234567890123456789012345";
+    uint8_t data[] = "hello................................12334455\0"; // Max 50....
 
     if (!RFM23BP__SetFrequency(433.500, 0.05))
     {
@@ -75,6 +72,47 @@ void test_tx(void)
     RFM23BP__WaitPacketSent();
 
     printf("test_tx done!\n");
+}
+
+// This works with test_rx below
+void test_tx()
+{
+
+    uint8_t buf[MAX_MESSAGE_LEN];
+    uint8_t len;
+
+    if (!RFM23BP__SetFrequency(433.500, 0.05))
+    {
+        printf("setFrequency failed\n");
+    }
+
+    if (!RFM23BP__SetModemConfig(GFSK_Rb38_4Fd19_6))
+    {
+        printf("setModemConfig failed\n");
+    }
+
+    while (1)
+      {
+
+        len = sizeof(buf);
+
+        if (rf22.recv(buf, &len)) // Should fail, no message available
+          Serial.println("recv 1 failed");
+
+        rf22.waitAvailable();
+        if (rf22.recv(buf, &len))
+        {
+           Serial.print("got one in user: ");
+           Serial.println((char*)buf);
+        }
+        else
+        {
+           Serial.print("recv 2 failed");
+        }
+      }
+    }
+
+
 }
 
 int main()
