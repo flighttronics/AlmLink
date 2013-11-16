@@ -1,0 +1,12 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [HSLink.PrjPCB]
+   Generated File[Standalone.TXT]
+   Generated File[Standalone.LDP]
+   Generated File[Standalone.DRR]
+
+
+Files Generated   : 3
+Documents Printed : 0
+
+Finished Output Generation At 21:37:01 On 2013-10-14

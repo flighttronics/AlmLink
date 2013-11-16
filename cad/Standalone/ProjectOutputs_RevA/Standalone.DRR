@@ -1,0 +1,16 @@
+---------------------------------------------------------------------------
+NCDrill File Report For: Standalone.PcbDoc   2013-10-14  21:37:01
+---------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : Standalone.TXT
+
+Tool         Hole Size           Hole Type     Hole Count Plated       Tool Travel
+---------------------------------------------------------------------------
+T1        28mil (0.7112mm)         Round          12               2.32 Inch (59.03 mm)
+T2        35.43mil (0.89992mm)     Round          32               6.40 Inch (162.47 mm)
+T3        125mil (3.175mm)         Round          2                1.65 Inch (41.91 mm)
+---------------------------------------------------------------------------
+Totals                                            46               10.37 Inch (263.41 mm)
+
+Total Processing Time (hh:mm:ss) : 00:00:00
