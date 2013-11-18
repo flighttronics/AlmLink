@@ -318,6 +318,7 @@ bool RFM23BP__SetModemConfig(T_MODEM_CONFIG_CHOICE index);
 bool RFM23BP__Send(const uint8_t* data, uint8_t len);
 bool RFM23BP__AppendTxBuf(const uint8_t* data, uint8_t len);
 bool RFM23BP__FillTxBuf(const uint8_t* data, uint8_t len);
+bool RFM23BP__Available();
 
 void RFM23BP__WriteRegister(T_RFM23BP taddress, uint8_t tdata);
 void RFM23BP__WriteBurst(uint8_t taddress, const uint8_t* src, uint8_t len);
@@ -349,6 +350,9 @@ void RFM23BP__ClearRxBuf(void);
 void RFM23BP__ClearTxBuf(void);
 void RFM23BP__WaitPacketSent(void);
 void RFM23BP__ClearBuffers(void);
+void RFM23BP__HandleInterrupt();
+void RFM23BP__WaitAvailable();
+void RFM23BP__PollInterrupt(int timeout_ms);
 
 
 uint8_t RFM23BP__HeaderTo(void);

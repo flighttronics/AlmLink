@@ -134,7 +134,6 @@ bool RFM23BP__Init(void)
     RFM23BP__WriteRegister(GPIO_CONFIGURATION0, 0xD2); // TX state 0x12
     RFM23BP__WriteRegister(GPIO_CONFIGURATION1, 0xD5); // RX state 0x15
 
-
     printf("GPIO_CONFIGURATION0 = 0x%02x\n", RFM23BP__ReadRegister(GPIO_CONFIGURATION0));
     printf("GPIO_CONFIGURATION1 = 0x%02x\n", RFM23BP__ReadRegister(GPIO_CONFIGURATION1));
 
@@ -400,7 +399,7 @@ void RFM23BP__SetModeTx(void)
         // to transmit mode in the middle of a receive can corrupt the
         // RX FIFO
         RFM23BP__ResetRxFifo();
-//  clearRxBuf();
+//  RFM23BP__ClearRxBuf();
     }
 }
 
@@ -487,7 +486,7 @@ void RFM23BP__WaitPacketSent(void)  // TODO will lock!!!
         }
         else
         {
-            _mode = MODE_IDLE;
+            //_mode = MODE_IDLE;
 
             if (status == 0)
             {
@@ -497,6 +496,7 @@ void RFM23BP__WaitPacketSent(void)  // TODO will lock!!!
             if (fdset[1].revents & POLLPRI)
             {
                 printf("poll() GPIO interrupt occurred\n");
+                RFM23BP__HandleInterrupt();
             }
 
             if (fdset[0].revents & POLLIN)
@@ -510,7 +510,7 @@ void RFM23BP__WaitPacketSent(void)  // TODO will lock!!!
 
 bool RFM23BP__Send(const uint8_t* data, uint8_t len)
 {
-    //_mode = MODE_TX;
+//_mode = MODE_TX;
     RFM23BP__WaitPacketSent();
 
     if (!RFM23BP__FillTxBuf(data, len))
@@ -658,4 +658,195 @@ float RFM23BP__ReadTemperature(uint8_t tsrange, uint8_t tvoffs)
     }
 
     return temp;
+}
+
+void RFM23BP__PollInterrupt(int timeout_ms)
+{
+    struct pollfd fdset[2];
+    uint8_t buffer[10];
+    int status;
+
+    memset((void*) fdset, 0, sizeof(fdset));
+
+    fdset[0].fd = int_fd;
+    fdset[0].events = POLLIN;
+    fdset[0].revents = 0;
+
+    fdset[1].fd = int_fd;
+    fdset[1].events = POLLPRI;
+    fdset[1].revents = 0;
+
+    status = poll(fdset, 2, timeout_ms);
+
+    if (status < 0)
+    {
+        printf("poll() failed!\n");
+    }
+    else
+    {
+        if (status == 0)
+        {
+            printf(".");
+        }
+
+        if (fdset[1].revents & POLLPRI)
+        {
+            printf("poll() GPIO interrupt occurred\n");
+            RFM23BP__HandleInterrupt();
+        }
+
+        if (fdset[0].revents & POLLIN)
+        {
+            (void) read(fdset[0].fd, buffer, 1);
+            printf("poll() stdin read 0x%2.2X\n", (unsigned int) buffer[0]);
+        }
+    }
+}
+
+bool RFM23BP__Available()
+{
+    RFM23BP__PollInterrupt(5000);
+
+    if (!_rxBufValid)
+    {
+        RFM23BP__SetModeRx(); // Make sure we are receiving
+    }
+
+    return _rxBufValid;
+}
+
+// Blocks until a valid message is received
+void RFM23BP__WaitAvailable()
+{
+    while (!RFM23BP__Available())
+    {
+        sleep(1);
+    }
+}
+
+// C++ level interrupt handler for this instance
+void RFM23BP__HandleInterrupt()
+{
+    uint8_t _lastInterruptFlags[2];
+// Read the interrupt flags which clears the interrupt
+    RFM23BP__ReadBurst(INTERRUPT_STATUS1, _lastInterruptFlags, 2);
+
+#if 0
+// Caution: Serial printing in this interrupt routine can cause mysterious crashes
+    Serial.print("interrupt ");
+    Serial.print(_lastInterruptFlags[0], HEX);
+    Serial.print(" ");
+    Serial.println(_lastInterruptFlags[1], HEX);
+    if (_lastInterruptFlags[0] == 0 && _lastInterruptFlags[1] == 0)
+    Serial.println("FUNNY: no interrupt!");
+#endif
+
+#if 0
+// TESTING: fake an RF22_IFFERROR
+    static int counter = 0;
+    if (_lastInterruptFlags[0] & RF22_IPKSENT && counter++ == 10)
+    {
+        _lastInterruptFlags[0] = RF22_IFFERROR;
+        counter = 0;
+    }
+#endif
+
+    if (_lastInterruptFlags[0] & IFFERROR)
+    {
+        RFM23BP__ResetFifos(); // Clears the interrupt
+
+        if (_mode == MODE_TX)
+        {
+            RFM23BP__RestartTransmit();
+        }
+        else if (_mode == MODE_RX)
+        {
+            RFM23BP__ClearRxBuf();
+        }
+        //  Serial.println("IFFERROR");
+    }
+
+// Caution, any delay here may cause a FF underflow or overflow
+    if (_lastInterruptFlags[0] & ITXFFAEM)
+    {
+        // See if more data has to be loaded into the Tx FIFO
+        RFM23BP__SendNextFragment();
+        //  Serial.println("ITXFFAEM");
+    }
+
+    if (_lastInterruptFlags[0] & IRXFFAFULL)
+    {
+        // Caution, any delay here may cause a FF overflow
+        // Read some data from the Rx FIFO
+        RFM23BP__ReadNextFragment();
+        //  Serial.println("IRXFFAFULL");
+    }
+
+    if (_lastInterruptFlags[0] & IEXT)
+    {
+        // This is not enabled by the base code, but users may want to enable it
+        //handleExternalInterrupt();
+        //  Serial.println("IEXT");
+    }
+
+    if (_lastInterruptFlags[1] & IWUT)
+    {
+        // This is not enabled by the base code, but users may want to enable it
+        //handleWakeupTimerInterrupt();
+        //  Serial.println("IWUT");
+    }
+
+    if (_lastInterruptFlags[0] & IPKSENT)
+    {
+        //  Serial.println("IPKSENT");
+        _txGood++;
+        // Transmission does not automatically clear the tx buffer.
+        // Could retransmit if we wanted
+        // RF22 transitions automatically to Idle
+        _mode = MODE_IDLE;
+    }
+
+    if (_lastInterruptFlags[0] & IPKVALID)
+    {
+        uint8_t len = RFM23BP__ReadRegister(RECEIVED_PACKET_LENGTH);
+        //  Serial.println("IPKVALID");
+        //  Serial.println(len);
+        //  Serial.println(_bufLen);
+
+        // May have already read one or more fragments
+        // Get any remaining unread octets, based on the expected length
+        // First make sure we don't overflow the buffer in the case of a stupid length
+        // or partial bad receives
+
+        if (len > MAX_MESSAGE_LEN || len < _bufLen)
+        {
+            _rxBad++;
+            _mode = MODE_IDLE;
+            RFM23BP__ClearRxBuf();
+            return; // Hmmm receiver buffer overflow.
+        }
+
+        RFM23BP__ReadBurst(FIFO_ACCESS, _buf + _bufLen, len - _bufLen);
+        _rxGood++;
+        _bufLen = len;
+        _mode = MODE_IDLE;
+        _rxBufValid = true;
+    }
+
+    if (_lastInterruptFlags[0] & ICRCERROR)
+    {
+        //  Serial.println("ICRCERR");
+        _rxBad++;
+        RFM23BP__ClearRxBuf();
+        RFM23BP__ResetRxFifo();
+        _mode = MODE_IDLE;
+        RFM23BP__SetModeRx(); // Keep trying
+    }
+
+    if (_lastInterruptFlags[1] & IPREAVAL)
+    {
+        //  Serial.println("IPREAVAL");
+        _lastRssi = RFM23BP__ReadRegister(RSSI);
+        RFM23BP__ClearRxBuf();
+    }
 }

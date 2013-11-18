@@ -75,7 +75,7 @@ void test_tx(void)
 }
 
 // This works with test_rx below
-void test_tx()
+void test_rx()
 {
 
     uint8_t buf[MAX_MESSAGE_LEN];
@@ -88,31 +88,28 @@ void test_tx()
 
     if (!RFM23BP__SetModemConfig(GFSK_Rb38_4Fd19_6))
     {
-        printf("setModemConfig failed\n");
+        printf("setM odemConfig failed\n");
     }
 
     while (1)
-      {
-
+    {
         len = sizeof(buf);
 
-        if (rf22.recv(buf, &len)) // Should fail, no message available
-          Serial.println("recv 1 failed");
+        if (recv(buf, &len)) // Should fail, no message available
+            printf("recv 1 failed\n");
 
-        rf22.waitAvailable();
-        if (rf22.recv(buf, &len))
+        RFM23BP__WaitAvailable();
+
+        if (recv(buf, &len))
         {
-           Serial.print("got one in user: ");
-           Serial.println((char*)buf);
+            printf("got one in user: ");
+            printf("%c\n", (char*) buf);
         }
         else
         {
-           Serial.print("recv 2 failed");
+            printf("recv 2 failed\n");
         }
-      }
     }
-
-
 }
 
 int main()
@@ -124,7 +121,7 @@ int main()
     }
     else
     {
-        test_tx();
+        test_rx();
 
         /*printf("Device Status = 0x%02x\n", RFM23BP__ReadRegister(DEVICE_STATUS));
 

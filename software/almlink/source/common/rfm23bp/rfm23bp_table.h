@@ -122,6 +122,7 @@ typedef enum
 	SYMBOL_DEF_RFM23BP(RECEIVED_HEADER2,                   "Received  Header2",                           0x48),
 	SYMBOL_DEF_RFM23BP(RECEIVED_HEADER1,                   "Received Header 1",                           0x49),
 	SYMBOL_DEF_RFM23BP(RECEIVED_HEADER0,                   "Received Header 0",                           0x4A),
+	SYMBOL_DEF_RFM23BP(RECEIVED_PACKET_LENGTH,             "Received Packet Length",                      0x4B),
 	SYMBOL_DEF_RFM23BP(CHARGE_PUMP_CURRENT_TRIMMING,       "?",                                           0x58),
 	SYMBOL_DEF_RFM23BP(AGC_OVERRIDE1,                      "AGC Override 1",                              0x69),
 	SYMBOL_DEF_RFM23BP(TX_POWER,                           "TX Power",                                    0x6D),
