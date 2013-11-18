@@ -56,8 +56,8 @@
 static int fd;
 static uint8_t mode = 0x00;
 static uint8_t bits = 8;
-static uint32_t speed = 1500000;
-static uint16_t delay = 0x00;
+static uint32_t speed = 1000000;
+static uint16_t delay = 0x01;
 //-------------------------------------------------------------------------------------------------
 //--------  P R I V A T E  F U N C T I O N S ------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -112,18 +112,22 @@ T_STATUS SPI__Close(void)
     return SUCCESS;
 }
 
+
+
 T_STATUS SPI__Transfer(uint8_t *tx, uint8_t *rx, uint16_t txrx_length)
 {
-    ssize_t blen;
-
     struct spi_ioc_transfer tr =
-    { .tx_buf = (unsigned long) tx, .rx_buf = (unsigned long) rx, .len =
-            txrx_length, .delay_usecs = delay, .speed_hz = speed,
-            .bits_per_word = bits, };
+    {
+      .tx_buf = (unsigned long) tx,
+      .rx_buf = (unsigned long) rx,
+      .len = txrx_length,
+      .delay_usecs = delay,
+      .speed_hz = speed,
+      .bits_per_word = bits,
+      .cs_change = 1
+    };
 
     int ret;
-
-    blen = write(fd, tx, txrx_length);
 
     ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
 
@@ -131,19 +135,6 @@ T_STATUS SPI__Transfer(uint8_t *tx, uint8_t *rx, uint16_t txrx_length)
     {
         printf("can't send spi message");
     }
-
-    /*for (ret = 0; ret < txrx_length; ret++)
-    {
-        if (!(ret % 6))
-        {
-            puts("");
-        }
-
-        printf("%.2X ", rx[ret]);
-    }
-
-    puts("");
-    */
 
     return SUCCESS;
 }
