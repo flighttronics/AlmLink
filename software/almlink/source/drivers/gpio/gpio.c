@@ -120,7 +120,6 @@ int GPIO__Unexport(unsigned int gpio)
         return fd;
     }
 
-
     len = snprintf(buf, sizeof(buf), "%d", gpio);
 
     write(fd, buf, len);
@@ -266,11 +265,12 @@ int GPIO__Open(unsigned int gpio)
 {
     int fd;
     int len;
+    int status;
     char buf[MAX_BUF];
 
     len = snprintf(buf, sizeof(buf), SYSFS_GPIO__DIR "/gpio%d/value", gpio);
 
-    fd = open(buf, O_RDONLY); // | O_NONBLOCK);
+    fd = open(buf, O_RDWR); // | O_NONBLOCK);
 
     if (fd < 0 || len <= 0)
     {
@@ -278,10 +278,24 @@ int GPIO__Open(unsigned int gpio)
     }
     else
     {
-        read(fd, buf, 2);
+        status = lseek(fd, 0, SEEK_SET);
+
+        if (status < 0)
+        {
+            printf("error lseek value\n");
+        }
+
+        status = read(fd, buf, 2);
+
+        if (status != 2)
+        {
+            printf("error read value\n");
+        }
+
+        return fd;
     }
 
-    return fd;
+    return -1;
 }
 
 /****************************************************************

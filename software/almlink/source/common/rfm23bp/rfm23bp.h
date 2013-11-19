@@ -66,9 +66,10 @@
 #define DEFAULT_NODE_ADDRESS 0
 
 // Keep track of the mode the RF23 is in
-#define MODE_IDLE         0
-#define MODE_RX           1
-#define MODE_TX           2
+typedef enum
+{
+    MODE_IDLE = 0, MODE_RX = 1, MODE_TX = 2
+} T_MODE;
 
 // These register masks etc are named wherever possible
 // corresponding to the bit and field names in the RF-22 Manual
@@ -351,8 +352,10 @@ void RFM23BP__ClearTxBuf(void);
 void RFM23BP__WaitPacketSent(void);
 void RFM23BP__ClearBuffers(void);
 void RFM23BP__HandleInterrupt();
-void RFM23BP__WaitAvailable();
+void RFM23BP__EnableInterrupts(void);
+void RFM23BP__DisableInterrupts(void);
 void RFM23BP__PollInterrupt(int timeout_ms);
+void RFM23BP__WaitAvailable();
 
 
 uint8_t RFM23BP__HeaderTo(void);
@@ -363,6 +366,8 @@ uint8_t RFM23BP__StatusRead(void);
 uint8_t RFM23BP__RSSIRead(void);
 uint8_t RFM23BP__ReadRegister(T_RFM23BP taddress);
 uint8_t RFM23BP__ReadADC(uint8_t adcsel, uint8_t adcref, uint8_t adcgain, uint8_t adcoffs);
+uint8_t RFM23BP__ReadGPIOValue(int fd);
+uint8_t RFM23BP__GetRXBuffer(uint8_t *abuffer);
 
 float RFM23BP__ReadTemperature(uint8_t tsrange, uint8_t tvoffs);
 

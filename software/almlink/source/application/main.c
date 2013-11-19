@@ -77,9 +77,10 @@ void test_tx(void)
 // This works with test_rx below
 void test_rx()
 {
+    int i;
 
     uint8_t buf[MAX_MESSAGE_LEN];
-    uint8_t len;
+    uint8_t len = 0;
 
     if (!RFM23BP__SetFrequency(433.500, 0.05))
     {
@@ -93,22 +94,18 @@ void test_rx()
 
     while (1)
     {
-        len = sizeof(buf);
-
-        if (recv(buf, &len)) // Should fail, no message available
-            printf("recv 1 failed\n");
+        RFM23BP__SetModeRx();
 
         RFM23BP__WaitAvailable();
 
-        if (recv(buf, &len))
+        len = RFM23BP__GetRXBuffer(buf);
+
+        for (i = 0; i < len; i++)
         {
-            printf("got one in user: ");
-            printf("%c\n", (char*) buf);
+            printf("0x%02x(%c) ", buf[i], buf[i]);fflush(stdout);
         }
-        else
-        {
-            printf("recv 2 failed\n");
-        }
+
+        printf("\n");
     }
 }
 
@@ -121,7 +118,11 @@ int main()
     }
     else
     {
+        //uint8_t len = RFM23BP__ReadRegister(RECEIVED_PACKET_LENGTH);
+
         test_rx();
+
+        printf("----------- DONE ---------\n");
 
         /*printf("Device Status = 0x%02x\n", RFM23BP__ReadRegister(DEVICE_STATUS));
 
